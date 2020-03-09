@@ -1,1 +1,6 @@
 core.*
+*.csv
+*.txt
+semphore/sw
+semphore/sr
+semphore/sender

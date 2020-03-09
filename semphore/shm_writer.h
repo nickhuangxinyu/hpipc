@@ -11,8 +11,9 @@ class ShmWriter: public ShmWorker {
   }
 
   void write(const MarketSnapshot& shot) {
-    int* tail = (int*)(m_data + 2*sizeof(int));
-    memcpy(m_data+3*sizeof(int)+*tail*sizeof(MarketSnapshot), &shot, sizeof(MarketSnapshot));
-    (*tail)++;
+    auto tail = (atomic_int*)(m_data + 2*sizeof(atomic_int));
+    memcpy(m_data+3*sizeof(atomic_int)+(tail->load()%m_size)*sizeof(MarketSnapshot), &shot, sizeof(MarketSnapshot));
+    tail->fetch_add(1);
   }
+ private:
 };

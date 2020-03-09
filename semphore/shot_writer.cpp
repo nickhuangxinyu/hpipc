@@ -4,7 +4,9 @@
 #include <util/common_tools.h>
 #include <util/sender.h>
 #include <chrono>
+#include <fstream>
 #include <thread>
+#include <memory>
 #include "shm_writer.h"
 #include "control.h"
 
@@ -12,16 +14,18 @@ class Shoter : public DataHandler {
  public:
   Shoter()
     : count(0),
-      sw(new ShmWriter(1234, 10000000, "mode")),
-      sender(new Sender("sender")) {
+      sw(new ShmWriter(1234, 10000, "mode")),
+      sender(new Sender("sender")),
+      f(MODE==1 ? new std::ofstream("wshm.csv", ios::out) : new std::ofstream("wzmq.csv", ios::out)) {
   }
 
   ~Shoter() {
     tc.EndTimer("shot cost");
+    f.get()->close();
   }
 
   void HandleShot(MarketSnapshot* shot) override {
-    // printf("count=%d\n", count);
+    // shot->Show(stdout);
     if (count++ == 1) {
       tc.StartTimer();
     }
@@ -36,9 +40,10 @@ class Shoter : public DataHandler {
     if (count < NUM_SAMPLE) {
       timeval t;
       gettimeofday(&t, NULL);
-      printf("%ld,%ld\n", t.tv_sec, t.tv_usec);
+      char buffer[1024];
+      snprintf(buffer, sizeof(buffer), "%ld,%ld\n", t.tv_sec, t.tv_usec);
+      *f.get() << buffer;
     }
-    // std::this_thread::sleep_for(chrono::nanoseconds(1));
     busy_sleep(chrono::microseconds(1));
   }
  private:
@@ -46,6 +51,7 @@ class Shoter : public DataHandler {
   ShmWriter* sw;
   TimeController tc;
   Sender * sender;
+  std::unique_ptr<ofstream> f;
 };
 
 int main() {

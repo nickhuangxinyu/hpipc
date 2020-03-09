@@ -8,6 +8,9 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <struct/market_snapshot.h>
+#include <atomic>
+
+using namespace std;
 
 class ShmWorker {
  public:
@@ -32,12 +35,12 @@ class ShmWorker {
     if (shmid == -1) {
       perror("shmget err");
       if (errno == ENOENT) {
-        shmid = shmget(m_key, 3*sizeof(int)+sizeof(MarketSnapshot)*size, 0666 | IPC_CREAT | O_EXCL);
+        shmid = shmget(m_key, 3*sizeof(std::atomic_int)+sizeof(MarketSnapshot)*size, 0666 | IPC_CREAT | O_EXCL);
         printf("creating new shm\n");
         m_data = (char*)shmat(shmid, NULL, 0);
-        *reinterpret_cast<int*>(m_data) = m_size;
-        *reinterpret_cast<int*>(m_data + sizeof(int)) = -1;
-        *reinterpret_cast<int*>(m_data + 2*sizeof(int)) = 0;
+        *reinterpret_cast<atomic_int*>(m_data) = m_size;
+        *reinterpret_cast<atomic_int*>(m_data + sizeof(std::atomic_int)) = -1;
+        *reinterpret_cast<atomic_int*>(m_data + 2*sizeof(std::atomic_int)) = 0;
       } else {
         exit(1);
       }
@@ -57,7 +60,5 @@ class ShmWorker {
   int m_key;
   int m_size;
   char* m_data;
-  int read_index;
-  int write_index;
   bool is_init;
 };
