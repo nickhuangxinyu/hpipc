@@ -7,11 +7,10 @@
 #include "control.h"
 
 int main() {
-  cout << sizeof(MarketSnapshot) << endl;
   printf("mode=%s\n", MODE==1 ? "SHM" : "ZMQ");
   unique_ptr<ofstream> f(MODE==1 ? new std::ofstream("rshm.csv", ios::out) : new std::ofstream("rzmq.csv", ios::out));
   int count = 0;
-  ShmReader sr(1234, 10000, "mode");
+  ShmReader<MarketSnapshot> sr(1234, 10000, "mode");
   TimeController tc;
   Recver r("sender");
   MarketSnapshot shot;

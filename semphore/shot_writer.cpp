@@ -14,7 +14,7 @@ class Shoter : public DataHandler {
  public:
   Shoter()
     : count(0),
-      sw(new ShmWriter(1234, 10000, "mode")),
+      sw(new ShmWriter <MarketSnapshot> (1234, 10000, "mode")),
       sender(new Sender("sender")),
       f(MODE==1 ? new std::ofstream("wshm.csv", ios::out) : new std::ofstream("wzmq.csv", ios::out)) {
   }
@@ -48,7 +48,7 @@ class Shoter : public DataHandler {
   }
  private:
   int count;
-  ShmWriter* sw;
+  ShmWriter<MarketSnapshot>* sw;
   TimeController tc;
   Sender * sender;
   std::unique_ptr<ofstream> f;

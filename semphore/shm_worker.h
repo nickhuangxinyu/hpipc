@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <struct/market_snapshot.h>
 #include <atomic>
+#include <memory>
 
 using namespace std;
 
@@ -24,6 +25,7 @@ class ShmWorker {
 
 
  protected:
+  template <typename T>
   void init(int key, int size) {
     if (is_init) {
       printf("this shmworker has beed inited!\n");
@@ -35,7 +37,7 @@ class ShmWorker {
     if (shmid == -1) {
       perror("shmget err");
       if (errno == ENOENT) {
-        shmid = shmget(m_key, 3*sizeof(std::atomic_int)+sizeof(MarketSnapshot)*size, 0666 | IPC_CREAT | O_EXCL);
+        shmid = shmget(m_key, 3*sizeof(std::atomic_int)+sizeof(T)*size, 0666 | IPC_CREAT | O_EXCL);
         printf("creating new shm\n");
         m_data = (char*)shmat(shmid, NULL, 0);
         *reinterpret_cast<atomic_int*>(m_data) = m_size;
