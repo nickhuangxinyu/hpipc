@@ -3,7 +3,7 @@
 template <typename T>
 class ShmReader : public ShmWorker {
  public:
-  ShmReader(int key, int size, std::string mode) {
+  ShmReader(int key, int size) {
     init <T> (key, size);
     auto tail = (atomic_int*)(m_data + 2*sizeof(atomic_int));
     read_index = tail->load();

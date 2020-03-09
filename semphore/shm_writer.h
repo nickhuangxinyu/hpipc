@@ -3,7 +3,7 @@
 template <typename T>
 class ShmWriter: public ShmWorker {
  public:
-  ShmWriter(int key, int size, std::string mode) {
+  ShmWriter(int key, int size) {
     init <T> (key, size);
   }
 
