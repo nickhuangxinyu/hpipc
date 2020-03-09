@@ -6,4 +6,4 @@ all:
 	$(cc) -o sw shot_writer.cpp $(link)
 
 clean:
-	rm -rf sr sw
+	rm -rf sr sw sender *.csv *.txt
