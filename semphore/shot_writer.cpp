@@ -10,11 +10,12 @@
 #include "shm_writer.h"
 #include "control.h"
 
+template <typename T>
 class Shoter : public DataHandler {
  public:
   Shoter()
     : count(0),
-      sw(new ShmWriter <MarketSnapshot> (1234, 10000, "mode")),
+      sw(new ShmWriter <T> (1234, 10000, "mode")),
       sender(new Sender("sender")),
       f(MODE==1 ? new std::ofstream("wshm.csv", ios::out) : new std::ofstream("wzmq.csv", ios::out)) {
   }
@@ -24,7 +25,7 @@ class Shoter : public DataHandler {
     f.get()->close();
   }
 
-  void HandleShot(MarketSnapshot* shot) override {
+  void HandleShot(T* shot) override {
     // shot->Show(stdout);
     if (count++ == 1) {
       tc.StartTimer();
@@ -48,14 +49,14 @@ class Shoter : public DataHandler {
   }
  private:
   int count;
-  ShmWriter<MarketSnapshot>* sw;
+  ShmWriter<T>* sw;
   TimeController tc;
   Sender * sender;
   std::unique_ptr<ofstream> f;
 };
 
 int main() {
-  Shoter s;
+  Shoter <MarketSnapshot> s;
   std::string file_path = "/running/2020-02-26/future2020-02-26.dat";
   s.LoadData(file_path);
 }

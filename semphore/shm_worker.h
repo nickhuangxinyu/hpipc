@@ -32,7 +32,6 @@ class ShmWorker {
       return;
     }
     m_key = key;
-    m_size = size;
     int shmid = shmget(m_key, 0, 0);
     if (shmid == -1) {
       perror("shmget err");
@@ -40,6 +39,7 @@ class ShmWorker {
         shmid = shmget(m_key, 3*sizeof(std::atomic_int)+sizeof(T)*size, 0666 | IPC_CREAT | O_EXCL);
         printf("creating new shm\n");
         m_data = (char*)shmat(shmid, NULL, 0);
+        m_size = size;
         *reinterpret_cast<atomic_int*>(m_data) = m_size;
         *reinterpret_cast<atomic_int*>(m_data + sizeof(std::atomic_int)) = -1;
         *reinterpret_cast<atomic_int*>(m_data + 2*sizeof(std::atomic_int)) = 0;
@@ -48,6 +48,7 @@ class ShmWorker {
       }
     } else {
       m_data = (char*)shmat(shmid, 0, 0);
+      m_size = reinterpret_cast<atomic_int*>(m_data)->load();
       printf("connecting to an exsited shm!\n");
     }
   
