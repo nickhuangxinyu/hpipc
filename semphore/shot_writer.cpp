@@ -15,7 +15,7 @@ class Shoter : public DataHandler {
  public:
   Shoter()
     : count(0),
-      sw(new ShmWriter <T> (1234, 10000)),
+      sw(new ShmWriter <T> (1234, SHM_SIZE)),
       sender(new Sender("sender")),
       f(MODE==1 ? new std::ofstream("wshm.csv", ios::out) : new std::ofstream("wzmq.csv", ios::out)) {
   }

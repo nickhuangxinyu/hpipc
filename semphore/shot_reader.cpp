@@ -10,11 +10,13 @@ int main() {
   printf("mode=%s\n", MODE==1 ? "SHM" : "ZMQ");
   unique_ptr<ofstream> f(MODE==1 ? new std::ofstream("rshm.csv", ios::out) : new std::ofstream("rzmq.csv", ios::out));
   int count = 0;
-  ShmReader<MarketSnapshot> sr(1234, 10000);
+  ShmReader<MarketSnapshot> sr(1234, SHM_SIZE);
   TimeController tc;
   Recver r("sender");
   MarketSnapshot shot;
-  while (count < 1043684) {
+  // while (count < 1043684) {
+  while (true) {
+    printf("count is %d\n", count);
     if (count++ == 2) {
       tc.StartTimer();
     }
