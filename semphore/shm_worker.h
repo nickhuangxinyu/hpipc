@@ -2,6 +2,7 @@
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <semaphore.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <string.h>
 #include <error.h>
@@ -19,8 +20,9 @@ class ShmWorker {
 
   }
 
-  ~ShmWorker() {
-
+  virtual ~ShmWorker() {
+    shmdt(m_data);
+    shmctl(shmid, IPC_RMID, 0);
   }
 
 
@@ -32,17 +34,22 @@ class ShmWorker {
       return;
     }
     m_key = key;
-    int shmid = shmget(m_key, 0, 0);
+    shmid = shmget(m_key, 0, 0);
+    header_size = 3*sizeof(std::atomic_int) + sizeof(pthread_mutex_t);
     if (shmid == -1) {
       perror("shmget err");
       if (errno == ENOENT) {
-        shmid = shmget(m_key, 3*sizeof(std::atomic_int)+sizeof(T)*size, 0666 | IPC_CREAT | O_EXCL);
+        shmid = shmget(m_key, header_size+sizeof(T)*size, 0666 | IPC_CREAT | O_EXCL);
         printf("creating new shm\n");
         m_data = (char*)shmat(shmid, NULL, 0);
         m_size = size;
         *reinterpret_cast<atomic_int*>(m_data) = m_size;
         *reinterpret_cast<atomic_int*>(m_data + sizeof(std::atomic_int)) = -1;
         *reinterpret_cast<atomic_int*>(m_data + 2*sizeof(std::atomic_int)) = 0;
+        auto p = reinterpret_cast<pthread_mutex_t*>(m_data + 3*sizeof(std::atomic_int));
+        pthread_mutexattr_init(&mutexattr);
+        pthread_mutexattr_setpshared(&mutexattr, PTHREAD_PROCESS_SHARED);
+        pthread_mutex_init(p, &mutexattr); 
       } else {
         exit(1);
       }
@@ -62,6 +69,9 @@ class ShmWorker {
 
   int m_key;
   int m_size;
+  int shmid;
   char* m_data;
   bool is_init;
+  size_t header_size;
+  pthread_mutexattr_t mutexattr;
 };

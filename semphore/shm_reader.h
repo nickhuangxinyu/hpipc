@@ -18,7 +18,7 @@ class ShmReader : public ShmWorker {
     T* s = NULL;
     while (read_index.load() == ((atomic_int*)(m_data + 2*sizeof(int)))->load()) {
     }
-    s = reinterpret_cast<T*>(m_data+3*sizeof(atomic_int)+(read_index.load()%m_size)*sizeof(T));
+    s = reinterpret_cast<T*>(m_data+header_size+(read_index.load()%m_size)*sizeof(T));
     read_index.fetch_add(1);
     return *s;
   }

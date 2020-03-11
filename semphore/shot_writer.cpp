@@ -23,6 +23,7 @@ class Shoter : public DataHandler {
   ~Shoter() {
     tc.EndTimer("shot cost");
     f.get()->close();
+    delete sw;
   }
 
   void HandleShot(T* shot) override {
