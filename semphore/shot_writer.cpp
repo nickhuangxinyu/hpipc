@@ -2,12 +2,12 @@
 #include <util/data_handler.h>
 #include <util/time_controller.h>
 #include <util/common_tools.h>
-#include <util/sender.h>
+#include <util/sender.hpp>
 #include <chrono>
 #include <fstream>
 #include <thread>
 #include <memory>
-#include "shm_writer.h"
+#include "shm_sender.hpp"
 #include "control.h"
 
 template <typename T>
@@ -15,8 +15,8 @@ class Shoter : public DataHandler {
  public:
   Shoter()
     : count(0),
-      sw(new ShmWriter <T> (1234, SHM_SIZE)),
-      sender(new Sender("sender")),
+      sw(new ShmSender<T> ("1234", SHM_SIZE)),
+      sender(new Sender<MarketSnapshot>("sender")),
       f(MODE==1 ? new std::ofstream("wshm.csv", ios::out) : new std::ofstream("wzmq.csv", ios::out)) {
   }
 
@@ -28,17 +28,6 @@ class Shoter : public DataHandler {
 
   void HandleShot(T* shot) override {
     // shot->Show(stdout);
-    if (count++ == 1) {
-      tc.StartTimer();
-    }
-    if (MODE == 1) {
-      sw->write(*shot);
-    } else if (MODE == 2) {
-      sender->Send(*shot);
-    } else {
-      printf("unknown mode\n");
-      exit(1);
-    }
     if (count < NUM_SAMPLE) {
       timeval t;
       gettimeofday(&t, NULL);
@@ -46,13 +35,24 @@ class Shoter : public DataHandler {
       snprintf(buffer, sizeof(buffer), "%ld,%ld\n", t.tv_sec, t.tv_usec);
       *f.get() << buffer;
     }
-    busy_sleep(chrono::microseconds(1));
+    if (count++ == 1) {
+      tc.StartTimer();
+    }
+    if (MODE == 1) {
+      sw->Send(*shot);
+    } else if (MODE == 2) {
+      sender->Send(*shot);
+    } else {
+      printf("unknown mode\n");
+      exit(1);
+    }
+    busy_sleep(chrono::microseconds(5));
   }
  private:
   int count;
-  ShmWriter<T>* sw;
+  ShmSender<T>* sw;
   TimeController tc;
-  Sender * sender;
+  Sender<MarketSnapshot> * sender;
   std::unique_ptr<ofstream> f;
 };
 
