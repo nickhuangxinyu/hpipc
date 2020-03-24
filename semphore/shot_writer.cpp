@@ -10,12 +10,11 @@
 #include "shm_sender.hpp"
 #include "control.h"
 
-template <typename T>
 class Shoter : public DataHandler {
  public:
   Shoter()
     : count(0),
-      sw(new ShmSender<T> ("1234", SHM_SIZE)),
+      sw(new ShmSender<MarketSnapshot> ("1234", SHM_SIZE)),
       sender(new Sender<MarketSnapshot>("sender")),
       f(MODE==1 ? new std::ofstream("wshm.csv", ios::out) : new std::ofstream("wzmq.csv", ios::out)) {
   }
@@ -26,8 +25,7 @@ class Shoter : public DataHandler {
     delete sw;
   }
 
-  void HandleShot(T* shot) override {
-    // shot->Show(stdout);
+  void HandleShot(MarketSnapshot* this_shot, MarketSnapshot* next_shot) override {
     if (count < NUM_SAMPLE) {
       timeval t;
       gettimeofday(&t, NULL);
@@ -39,9 +37,9 @@ class Shoter : public DataHandler {
       tc.StartTimer();
     }
     if (MODE == 1) {
-      sw->Send(*shot);
+      sw->Send(*this_shot);
     } else if (MODE == 2) {
-      sender->Send(*shot);
+      sender->Send(*this_shot);
     } else {
       printf("unknown mode\n");
       exit(1);
@@ -50,14 +48,14 @@ class Shoter : public DataHandler {
   }
  private:
   int count;
-  ShmSender<T>* sw;
+  ShmSender<MarketSnapshot>* sw;
   TimeController tc;
   Sender<MarketSnapshot> * sender;
   std::unique_ptr<ofstream> f;
 };
 
 int main() {
-  Shoter <MarketSnapshot> s;
-  std::string file_path = "/running/2020-02-26/future2020-02-26.dat";
+  Shoter s;
+  std::string file_path = "/running/2020-03-17/future2020-03-17.dat";
   s.LoadData(file_path);
 }

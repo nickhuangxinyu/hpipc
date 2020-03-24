@@ -1,5 +1,6 @@
 #!/bin/bash
 ipcrm -a
+rm sender
 sed -i "s/MODE 2/MODE 1/g" control.h
 make
 ./sr &!
