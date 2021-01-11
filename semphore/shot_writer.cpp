@@ -1,8 +1,8 @@
 #include <struct/market_snapshot.h>
-#include <util/data_handler.h>
+#include <util/data_handler.hpp>
 #include <util/time_controller.h>
 #include <util/common_tools.h>
-#include <util/sender.hpp>
+#include <util/zmq_sender.hpp>
 #include <chrono>
 #include <fstream>
 #include <thread>
@@ -10,12 +10,17 @@
 #include "shm_sender.hpp"
 #include "control.h"
 
-class Shoter : public DataHandler {
+void busy_sleep(std::chrono::nanoseconds t) {
+  auto end=high_resolution_clock::now() + t; // - overhead;
+  while(true) if(high_resolution_clock::now() > end) break;
+}
+
+class Shoter : public DataHandler<MarketSnapshot> {
  public:
   Shoter()
     : count(0),
       sw(new ShmSender<MarketSnapshot> ("1234", SHM_SIZE)),
-      sender(new Sender<MarketSnapshot>("sender")),
+      sender(new ZmqSender<MarketSnapshot>("sender")),
       f(MODE==1 ? new std::ofstream("wshm.csv", ios::out) : new std::ofstream("wzmq.csv", ios::out)) {
   }
 
@@ -50,12 +55,12 @@ class Shoter : public DataHandler {
   int count;
   ShmSender<MarketSnapshot>* sw;
   TimeController tc;
-  Sender<MarketSnapshot> * sender;
+  ZmqSender<MarketSnapshot> * sender;
   std::unique_ptr<ofstream> f;
 };
 
 int main() {
   Shoter s;
-  std::string file_path = "/running/2020-03-17/future2020-03-17.dat";
+  std::string file_path = "/home/xhuang/future2021-01-04.dat.gz";
   s.LoadData(file_path);
 }

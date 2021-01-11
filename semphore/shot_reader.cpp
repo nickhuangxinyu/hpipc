@@ -1,7 +1,6 @@
 #include <struct/market_snapshot.h>
-#include <util/data_handler.h>
 #include <util/time_controller.h>
-#include <util/recver.hpp>
+#include <util/zmq_recver.hpp>
 #include <memory>
 #include "shm_recver.hpp"
 #include "control.h"
@@ -12,7 +11,7 @@ int main() {
   int count = 0;
   ShmRecver<MarketSnapshot> sr("1234", SHM_SIZE);
   TimeController tc;
-  Recver<MarketSnapshot> r("sender");
+  ZmqRecver<MarketSnapshot> r("sender");
   MarketSnapshot shot;
   while (count < 1043684) {
   // while (true) {
@@ -32,9 +31,11 @@ int main() {
     if (count < NUM_SAMPLE) {
       timeval t;
       gettimeofday(&t, NULL);
-      char buffer[1024];
-      snprintf(buffer, sizeof(buffer), "%ld,%ld\n", t.tv_sec, t.tv_usec);
-      *f.get() << buffer;
+      // char buffer[1024];
+      // snprintf(buffer, sizeof(buffer), "%ld,%ld\n", t.tv_sec, t.tv_usec);
+      *f.get() << t.tv_sec;
+      *f.get() << ",";
+      *f.get() << t.tv_usec << endl;
     }
   }
   tc.EndTimer("100w shot read");
