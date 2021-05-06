@@ -61,6 +61,6 @@ class Shoter : public DataHandler<MarketSnapshot> {
 
 int main() {
   Shoter s;
-  std::string file_path = "/home/xhuang/future2021-01-04.dat.gz";
+  std::string file_path = "/root/future2021-01-04.dat.gz";
   s.LoadData(file_path);
 }

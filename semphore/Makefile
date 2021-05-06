@@ -1,5 +1,5 @@
 cc = g++ -std=c++11
-link = -lpthread -L /home/xhuang/locallib/lib -lzmq -ltimecontroller -lz
+link = -lpthread -L /home/xhuang/locallib/lib -lzmq -ltimecontroller -lz -lconfig++
 
 all:
 	$(cc) -O3 -o sr shot_reader.cpp $(link)
